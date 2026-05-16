@@ -44,6 +44,15 @@ public class HomeActivity extends AppCompatActivity {
         setupEvents();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (currentUser != null && usersRef != null) {
+            loadUserInfo();
+        }
+    }
+
     private void initViews() {
         tvUserInfo = findViewById(R.id.tvUserInfo);
         tvStats = findViewById(R.id.tvStats);
@@ -64,21 +73,34 @@ public class HomeActivity extends AppCompatActivity {
                         String username = snapshot.child("username").getValue(String.class);
                         String email = snapshot.child("email").getValue(String.class);
 
-                        Long win = snapshot.child("win").getValue(Long.class);
-                        Long lose = snapshot.child("lose").getValue(Long.class);
-                        Long draw = snapshot.child("draw").getValue(Long.class);
-                        Long score = snapshot.child("score").getValue(Long.class);
+                        Long aiWin = snapshot.child("aiWin").getValue(Long.class);
+                        Long aiLose = snapshot.child("aiLose").getValue(Long.class);
+                        Long aiDraw = snapshot.child("aiDraw").getValue(Long.class);
+                        Long aiTotalMatches = snapshot.child("aiTotalMatches").getValue(Long.class);
 
-                        if (username == null) username = "Người chơi";
-                        if (email == null) email = currentUser.getEmail();
+                        Long onlineWin = snapshot.child("onlineWin").getValue(Long.class);
+                        Long onlineLose = snapshot.child("onlineLose").getValue(Long.class);
+                        Long onlineDraw = snapshot.child("onlineDraw").getValue(Long.class);
+                        Long onlineTotalMatches = snapshot.child("onlineTotalMatches").getValue(Long.class);
+                        Long onlineScore = snapshot.child("onlineScore").getValue(Long.class);
 
-                        if (win == null) win = 0L;
-                        if (lose == null) lose = 0L;
-                        if (draw == null) draw = 0L;
-                        if (score == null) score = 0L;
+                        if (aiWin == null) aiWin = 0L;
+                        if (aiLose == null) aiLose = 0L;
+                        if (aiDraw == null) aiDraw = 0L;
+                        if (aiTotalMatches == null) aiTotalMatches = 0L;
+
+                        if (onlineWin == null) onlineWin = 0L;
+                        if (onlineLose == null) onlineLose = 0L;
+                        if (onlineDraw == null) onlineDraw = 0L;
+                        if (onlineTotalMatches == null) onlineTotalMatches = 0L;
+                        if (onlineScore == null) onlineScore = 0L;
 
                         tvUserInfo.setText("Xin chào, " + username + "\n" + email);
-                        tvStats.setText("Thắng: " + win + " | Thua: " + lose + " | Hòa: " + draw + " | Điểm: " + score);
+                        tvStats.setText(
+                                "AI: " + aiWin + " thắng | " + aiLose + " thua | " + aiDraw + " hòa" +
+                                        "\nOnline: " + onlineWin + " thắng | " + onlineLose + " thua | " + onlineDraw + " hòa" +
+                                        "\nĐiểm xếp hạng: " + onlineScore
+                        );
                     } else {
                         tvUserInfo.setText("Xin chào\n" + currentUser.getEmail());
                         tvStats.setText("Chưa có thống kê");
@@ -91,19 +113,23 @@ public class HomeActivity extends AppCompatActivity {
 
     private void setupEvents() {
         btnPlayAI.setOnClickListener(v -> {
-            Toast.makeText(this, "Chức năng Chơi với AI sẽ làm ở bước sau", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(HomeActivity.this, GameAIActivity.class);
+            startActivity(intent);
         });
 
         btnPlayOnline.setOnClickListener(v -> {
-            Toast.makeText(this, "Chức năng Online sẽ làm sau", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(HomeActivity.this, OnlineLobbyActivity.class);
+            startActivity(intent);
         });
 
         btnHistory.setOnClickListener(v -> {
-            Toast.makeText(this, "Chức năng Lịch sử sẽ làm sau", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(HomeActivity.this, HistoryActivity.class);
+            startActivity(intent);
         });
 
         btnRanking.setOnClickListener(v -> {
-            Toast.makeText(this, "Chức năng Bảng xếp hạng sẽ làm sau", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(HomeActivity.this, RankingActivity.class);
+            startActivity(intent);
         });
 
         btnLogout.setOnClickListener(v -> {

@@ -88,12 +88,17 @@ public class RegisterActivity extends AppCompatActivity {
                     userMap.put("uid", uid);
                     userMap.put("username", username);
                     userMap.put("email", email);
-                    userMap.put("totalMatches", 0);
-                    userMap.put("win", 0);
-                    userMap.put("lose", 0);
-                    userMap.put("draw", 0);
-                    userMap.put("score", 0);
-                    userMap.put("createdAt", System.currentTimeMillis());
+                    userMap.put("aiTotalMatches", 0);
+                    userMap.put("aiWin", 0);
+                    userMap.put("aiLose", 0);
+                    userMap.put("aiDraw", 0);
+
+
+                    userMap.put("onlineTotalMatches", 0);
+                    userMap.put("onlineWin", 0);
+                    userMap.put("onlineLose", 0);
+                    userMap.put("onlineDraw", 0);
+                    userMap.put("onlineScore", 0);
 
                     usersRef.child(uid).setValue(userMap)
                             .addOnSuccessListener(unused -> {
