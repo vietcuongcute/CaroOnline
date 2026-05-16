@@ -43,6 +43,8 @@ public class GameAIActivity extends AppCompatActivity {
     private static final String DATABASE_URL = "https://caroonline-e650f-default-rtdb.asia-southeast1.firebasedatabase.app/";
     private boolean gameOver = false;
     private boolean playerTurn = true;
+    private int lastAIRow = -1;
+    private int lastAICol = -1;
 
     private final String PLAYER = "X";
     private final String AI = "O";
@@ -107,6 +109,8 @@ public class GameAIActivity extends AppCompatActivity {
         gameOver = false;
         playerTurn = true;
         totalMoves = 0;
+        lastAIRow = -1;
+        lastAICol = -1;
         tvTurn.setText("Lượt của bạn: X");
     }
 
@@ -159,6 +163,7 @@ public class GameAIActivity extends AppCompatActivity {
         }
 
         makeMove(row, col, AI);
+        highlightLastAIMove(row, col);
 
         if (checkWin(row, col, AI)) {
             gameOver = true;
@@ -180,6 +185,18 @@ public class GameAIActivity extends AppCompatActivity {
         tvTurn.setText("Lượt của bạn: X");
     }
 
+    private void highlightLastAIMove(int row, int col) {
+        // Trả ô AI cũ về nền trắng
+        if (lastAIRow != -1 && lastAICol != -1) {
+            buttons[lastAIRow][lastAICol].setBackgroundColor(Color.WHITE);
+        }
+
+        // Tô ô AI vừa đánh
+        buttons[row][col].setBackgroundColor(Color.rgb(255, 249, 196));
+
+        lastAIRow = row;
+        lastAICol = col;
+    }
     private void makeMove(int row, int col, String symbol) {
         board[row][col] = symbol;
         buttons[row][col].setText(symbol);
