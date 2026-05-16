@@ -2,7 +2,7 @@ package com.example.caroonline;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
+import androidx.activity.OnBackPressedCallback;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -11,7 +11,10 @@ import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.annotation.NonNull;
+import android.os.CountDownTimer;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -54,9 +57,16 @@ public class OnlineGameActivity extends AppCompatActivity {
     private String currentTurn = "X";
     private String status = "waiting";
     private String winner = "";
+    private int lastMoveRow = -1;
+    private int lastMoveCol = -1;
+    private TextView tvTimer;
+    private CountDownTimer turnTimer;
+    private static final long TURN_TIME_MS = 30000;
+    private long turnStartedAt = 0;
 
 
     private boolean resultHandled = false;
+    private boolean playAgainDialogShown = false;
 
     private static final String DATABASE_URL = "https://caroonline-e650f-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
@@ -85,6 +95,7 @@ public class OnlineGameActivity extends AppCompatActivity {
         myUid = currentUser.getUid();
 
         roomRef = FirebaseDatabase.getInstance(DATABASE_URL).getReference("rooms").child(roomCode);
+        roomRef.onDisconnect().removeValue();
         usersRef = FirebaseDatabase.getInstance(DATABASE_URL).getReference("users");
         matchesRef = FirebaseDatabase.getInstance(DATABASE_URL).getReference("matches");
 
@@ -97,6 +108,12 @@ public class OnlineGameActivity extends AppCompatActivity {
         listenRoomChanges();
 
         btnLeaveRoom.setOnClickListener(v -> confirmLeaveRoom());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                confirmLeaveRoom();
+            }
+        });
     }
 
     private void initViews() {
@@ -105,6 +122,7 @@ public class OnlineGameActivity extends AppCompatActivity {
         tvTurn = findViewById(R.id.tvTurn);
         gridBoard = findViewById(R.id.gridBoard);
         btnLeaveRoom = findViewById(R.id.btnLeaveRoom);
+        tvTimer = findViewById(R.id.tvTimer);
     }
 
     private void createBoard() {
@@ -147,14 +165,21 @@ public class OnlineGameActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (!snapshot.exists()) {
-                    Toast.makeText(OnlineGameActivity.this, "Phòng không còn tồn tại", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OnlineGameActivity.this, "Đối thủ đã rời phòng", Toast.LENGTH_LONG).show();
                     finish();
                     return;
                 }
 
                 loadRoomInfo(snapshot);
+                if (status.equals("playing")) {
+                    resultHandled = false;
+                    playAgainDialogShown = false;
+                }
                 loadBoard(snapshot);
                 updateUI();
+                startTurnTimer();
+                handlePlayAgainRequest(snapshot);
+                handlePlayAgainResponse(snapshot);
 
                 if (status.equals("finished") && !resultHandled) {
                     resultHandled = true;
@@ -171,6 +196,80 @@ public class OnlineGameActivity extends AppCompatActivity {
         roomRef.addValueEventListener(roomListener);
     }
 
+    private void handlePlayAgainResponse(DataSnapshot snapshot) {
+        if (!mySymbol.equals("X")) {
+            return;
+        }
+
+        Boolean playAgainRequest = snapshot.child("playAgainRequest").getValue(Boolean.class);
+        String playAgainResponse = snapshot.child("playAgainResponse").getValue(String.class);
+
+        if (playAgainRequest == null || !playAgainRequest) {
+            return;
+        }
+
+        if (playAgainResponse == null || playAgainResponse.isEmpty()) {
+            return;
+        }
+
+        if (playAgainResponse.equals("ACCEPT")) {
+            playAgain();
+        } else if (playAgainResponse.equals("REJECT")) {
+            Toast.makeText(this, "Đối thủ đã từ chối chơi lại", Toast.LENGTH_LONG).show();
+            deleteRoomAndFinish();
+        }
+    }
+    private void handlePlayAgainRequest(DataSnapshot snapshot) {
+        Boolean playAgainRequest = snapshot.child("playAgainRequest").getValue(Boolean.class);
+        String playAgainRequester = snapshot.child("playAgainRequester").getValue(String.class);
+        String playAgainResponse = snapshot.child("playAgainResponse").getValue(String.class);
+
+        if (playAgainRequest == null || !playAgainRequest) {
+            return;
+        }
+
+        if (playAgainRequester == null || playAgainRequester.equals(myUid)) {
+            return;
+        }
+
+        if (playAgainResponse == null) {
+            playAgainResponse = "";
+        }
+
+        if (!playAgainResponse.isEmpty()) {
+            return;
+        }
+
+        if (playAgainDialogShown) {
+            return;
+        }
+
+        playAgainDialogShown = true;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chơi lại")
+                .setMessage("Đối thủ muốn chơi lại. Bạn có đồng ý không?")
+                .setPositiveButton("Đồng ý", (dialog, which) -> acceptPlayAgain())
+                .setNegativeButton("Từ chối", (dialog, which) -> rejectPlayAgain())
+                .setCancelable(false)
+                .show();
+    }
+    private void acceptPlayAgain() {
+        roomRef.child("playAgainResponse").setValue("ACCEPT")
+                .addOnSuccessListener(unused -> {
+                    if (!mySymbol.equals("X")) {
+                        Toast.makeText(this, "Bạn đã đồng ý chơi lại", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void rejectPlayAgain() {
+        roomRef.child("playAgainResponse").setValue("REJECT")
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(this, "Bạn đã từ chối chơi lại", Toast.LENGTH_SHORT).show();
+                    deleteRoomAndFinish();
+                });
+    }
     private void loadRoomInfo(DataSnapshot snapshot) {
         String xId = snapshot.child("playerXId").getValue(String.class);
         String oId = snapshot.child("playerOId").getValue(String.class);
@@ -179,6 +278,9 @@ public class OnlineGameActivity extends AppCompatActivity {
         String turn = snapshot.child("currentTurn").getValue(String.class);
         String roomStatus = snapshot.child("status").getValue(String.class);
         String roomWinner = snapshot.child("winner").getValue(String.class);
+        Long lastRow = snapshot.child("lastMoveRow").getValue(Long.class);
+        Long lastCol = snapshot.child("lastMoveCol").getValue(Long.class);
+        Long startedAt = snapshot.child("turnStartedAt").getValue(Long.class);
 
         playerXId = xId == null ? "" : xId;
         playerOId = oId == null ? "" : oId;
@@ -187,6 +289,9 @@ public class OnlineGameActivity extends AppCompatActivity {
         currentTurn = turn == null ? "X" : turn;
         status = roomStatus == null ? "waiting" : roomStatus;
         winner = roomWinner == null ? "" : roomWinner;
+        lastMoveRow = lastRow == null ? -1 : lastRow.intValue();
+        lastMoveCol = lastCol == null ? -1 : lastCol.intValue();
+        turnStartedAt = startedAt == null ? System.currentTimeMillis() : startedAt;
     }
 
     private void loadBoard(DataSnapshot snapshot) {
@@ -196,6 +301,7 @@ public class OnlineGameActivity extends AppCompatActivity {
                 buttons[row][col].setText("");
                 buttons[row][col].setEnabled(true);
                 buttons[row][col].setTypeface(null, Typeface.NORMAL);
+                buttons[row][col].setBackgroundColor(Color.WHITE);
             }
         }
 
@@ -225,6 +331,9 @@ public class OnlineGameActivity extends AppCompatActivity {
                         buttons[row][col].setTextColor(Color.BLUE);
                     } else {
                         buttons[row][col].setTextColor(Color.RED);
+                    }
+                    if (row == lastMoveRow && col == lastMoveCol) {
+                        buttons[row][col].setBackgroundColor(Color.rgb(255, 245, 157));
                     }
                 }
             } catch (Exception ignored) {
@@ -297,6 +406,9 @@ public class OnlineGameActivity extends AppCompatActivity {
 
         Map<String, Object> updateMap = new HashMap<>();
         updateMap.put("board/" + key, mySymbol);
+        updateMap.put("lastMoveRow", row);
+        updateMap.put("lastMoveCol", col);
+        updateMap.put("turnStartedAt", System.currentTimeMillis());
 
         if (checkWin(row, col, mySymbol)) {
             updateMap.put("status", "finished");
@@ -318,22 +430,107 @@ public class OnlineGameActivity extends AppCompatActivity {
 
         if (winner.equals("DRAW")) {
             message = "Trận đấu hòa!";
-            updateOnlineStatsForBoth("DRAW");
-            saveOnlineMatchHistory("DRAW");
         } else if (winner.equals(mySymbol)) {
             message = "Bạn thắng!";
-            updateOnlineStatsForBoth(winner);
-            saveOnlineMatchHistory(winner);
         } else {
             message = "Bạn thua!";
+        }
+
+        // Chỉ máy X xử lý kết quả, và chỉ xử lý 1 lần
+        if (mySymbol.equals("X")) {
+            processOnlineResultOnce();
         }
 
         new AlertDialog.Builder(this)
                 .setTitle("Kết quả")
                 .setMessage(message)
-                .setPositiveButton("Về trang chủ", (dialog, which) -> deleteRoomAndFinish())
+                .setPositiveButton("Chơi lại", (dialog, which) -> requestPlayAgain())
+                .setNegativeButton("Về trang chủ", (dialog, which) -> deleteRoomAndFinish())
                 .setCancelable(false)
                 .show();
+    }
+    private void playAgain() {
+        if (!mySymbol.equals("X")) {
+            Toast.makeText(this, "Chỉ chủ phòng mới được tạo ván mới", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> updateMap = new HashMap<>();
+        updateMap.put("board", null);
+        updateMap.put("currentTurn", "X");
+        updateMap.put("status", "playing");
+        updateMap.put("winner", "");
+        updateMap.put("finishedAt", null);
+        updateMap.put("resultSaved", false);
+        updateMap.put("createdAt", System.currentTimeMillis());
+        updateMap.put("lastMoveRow", null);
+        updateMap.put("playAgainRequest", false);
+        updateMap.put("playAgainRequester", "");
+        updateMap.put("playAgainResponse", "");
+        updateMap.put("playAgainRequestedAt", null);
+
+        updateMap.put("turnStartedAt", System.currentTimeMillis());
+
+        roomRef.updateChildren(updateMap)
+                .addOnSuccessListener(unused -> {
+                    resultHandled = false;
+                    playAgainDialogShown = false;
+                    Toast.makeText(this, "Đã bắt đầu ván mới", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Lỗi chơi lại: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
+    }
+    private void requestPlayAgain() {
+        if (!mySymbol.equals("X")) {
+            Toast.makeText(this, "Chỉ chủ phòng mới được gửi yêu cầu chơi lại", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> updateMap = new HashMap<>();
+        updateMap.put("playAgainRequest", true);
+        updateMap.put("playAgainRequester", myUid);
+        updateMap.put("playAgainResponse", "");
+        updateMap.put("playAgainRequestedAt", System.currentTimeMillis());
+
+        roomRef.updateChildren(updateMap)
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(this, "Đã gửi yêu cầu chơi lại, đang chờ đối thủ...", Toast.LENGTH_LONG).show()
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Lỗi gửi yêu cầu: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
+    }
+    private void processOnlineResultOnce() {
+        roomRef.child("resultSaved").runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                Boolean resultSaved = currentData.getValue(Boolean.class);
+
+                if (resultSaved != null && resultSaved) {
+                    return Transaction.abort();
+                }
+
+                currentData.setValue(true);
+                return Transaction.success(currentData);
+            }
+
+            @Override
+            public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
+                if (error != null) {
+                    Toast.makeText(OnlineGameActivity.this,
+                            "Lỗi lưu kết quả: " + error.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (committed) {
+                    updateOnlineStatsForBoth(winner);
+                    saveOnlineMatchHistory(winner);
+                }
+            }
+        });
     }
 
     private void updateOnlineStatsForBoth(String winnerSymbol) {
@@ -396,6 +593,58 @@ public class OnlineGameActivity extends AppCompatActivity {
                 });
     }
 
+    private void startTurnTimer() {
+        if (turnTimer != null) {
+            turnTimer.cancel();
+        }
+
+        if (!status.equals("playing")) {
+            tvTimer.setText("Thời gian: --");
+            return;
+        }
+
+        long elapsed = System.currentTimeMillis() - turnStartedAt;
+        long remaining = TURN_TIME_MS - elapsed;
+
+        if (remaining <= 0) {
+            tvTimer.setText("Hết giờ!");
+
+            if (currentTurn.equals(mySymbol)) {
+                handleTimeoutLose();
+            }
+            return;
+        }
+
+        turnTimer = new CountDownTimer(remaining, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long seconds = millisUntilFinished / 1000;
+                tvTimer.setText("Thời gian: " + seconds + "s");
+            }
+
+            @Override
+            public void onFinish() {
+                tvTimer.setText("Hết giờ!");
+
+                if (currentTurn.equals(mySymbol) && status.equals("playing")) {
+                    handleTimeoutLose();
+                }
+            }
+        };
+
+        turnTimer.start();
+    }
+    private void handleTimeoutLose() {
+        String timeoutWinner = mySymbol.equals("X") ? "O" : "X";
+
+        Map<String, Object> updateMap = new HashMap<>();
+        updateMap.put("status", "finished");
+        updateMap.put("winner", timeoutWinner);
+        updateMap.put("finishedAt", System.currentTimeMillis());
+        updateMap.put("timeoutLoser", mySymbol);
+
+        roomRef.updateChildren(updateMap);
+    }
     private void saveOnlineMatchHistory(String winnerSymbol) {
         if (!mySymbol.equals("X")) {
             return;
@@ -548,10 +797,14 @@ public class OnlineGameActivity extends AppCompatActivity {
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
+
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        if (turnTimer != null) {
+            turnTimer.cancel();
+        }
         if (roomRef != null && roomListener != null) {
             roomRef.removeEventListener(roomListener);
         }

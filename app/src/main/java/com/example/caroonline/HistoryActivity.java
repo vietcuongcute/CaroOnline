@@ -14,7 +14,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
+import com.google.firebase.database.DataSnapshot;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -62,7 +62,7 @@ public class HistoryActivity extends AppCompatActivity {
         tvHistoryStatus.setText("Đang tải lịch sử...");
         layoutHistoryList.removeAllViews();
 
-        matchesRef.orderByChild("playerId").equalTo(uid).get()
+        matchesRef.get()
                 .addOnSuccessListener(snapshot -> {
                     layoutHistoryList.removeAllViews();
 
@@ -71,29 +71,85 @@ public class HistoryActivity extends AppCompatActivity {
                         return;
                     }
 
-                    tvHistoryStatus.setText("Danh sách trận đã chơi");
+                    int count = 0;
 
-                    // Duyệt từng trận đấu trong node matches
-                    for (com.google.firebase.database.DataSnapshot matchSnapshot : snapshot.getChildren()) {
+                    for (DataSnapshot matchSnapshot : snapshot.getChildren()) {
                         String mode = matchSnapshot.child("mode").getValue(String.class);
+
+                        if (mode == null) {
+                            mode = "AI";
+                        }
+
+                        boolean isMyMatch = false;
+
+                        if (mode.equals("AI")) {
+                            String playerId = matchSnapshot.child("playerId").getValue(String.class);
+                            isMyMatch = uid.equals(playerId);
+                        } else if (mode.equals("ONLINE")) {
+                            String playerXId = matchSnapshot.child("playerXId").getValue(String.class);
+                            String playerOId = matchSnapshot.child("playerOId").getValue(String.class);
+
+                            isMyMatch = uid.equals(playerXId) || uid.equals(playerOId);
+                        }
+
+                        if (!isMyMatch) {
+                            continue;
+                        }
+
                         String result = matchSnapshot.child("result").getValue(String.class);
                         String winner = matchSnapshot.child("winner").getValue(String.class);
                         Long totalMoves = matchSnapshot.child("totalMoves").getValue(Long.class);
                         Long createdAt = matchSnapshot.child("createdAt").getValue(Long.class);
 
-                        if (mode == null) mode = "AI";
                         if (result == null) result = "UNKNOWN";
                         if (winner == null) winner = "UNKNOWN";
                         if (totalMoves == null) totalMoves = 0L;
                         if (createdAt == null) createdAt = 0L;
 
+                        if (mode.equals("ONLINE")) {
+                            result = convertOnlineResultToMyResult(matchSnapshot, uid, result);
+                        }
+
                         addMatchItem(mode, result, winner, totalMoves, createdAt);
+                        count++;
+                    }
+
+                    if (count == 0) {
+                        tvHistoryStatus.setText("Bạn chưa có trận đấu nào");
+                    } else {
+                        tvHistoryStatus.setText("Danh sách trận đã chơi");
                     }
                 })
                 .addOnFailureListener(e -> {
                     tvHistoryStatus.setText("Lỗi tải lịch sử");
                     Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
+    }
+    private String convertOnlineResultToMyResult(DataSnapshot matchSnapshot, String uid, String result) {
+        String playerXId = matchSnapshot.child("playerXId").getValue(String.class);
+        String playerOId = matchSnapshot.child("playerOId").getValue(String.class);
+
+        if (result.equals("DRAW")) {
+            return "DRAW";
+        }
+
+        if (result.equals("X_WIN")) {
+            if (uid.equals(playerXId)) {
+                return "WIN";
+            } else {
+                return "LOSE";
+            }
+        }
+
+        if (result.equals("O_WIN")) {
+            if (uid.equals(playerOId)) {
+                return "WIN";
+            } else {
+                return "LOSE";
+            }
+        }
+
+        return result;
     }
 
     // Hàm thêm một item trận đấu vào giao diện

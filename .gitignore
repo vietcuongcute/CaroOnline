@@ -21,4 +21,5 @@ build
 # Keystore files
 *.jks
 *.keystore
+app/google-services.json
 
