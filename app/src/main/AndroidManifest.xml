@@ -11,6 +11,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CaroOnline">
         <activity
+            android:name=".WinningLineView"
+            android:exported="false" />
+        <activity
             android:name=".OnlineGameActivity"
             android:exported="false" />
         <activity

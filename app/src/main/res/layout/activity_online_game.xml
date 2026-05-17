@@ -69,13 +69,25 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent">
 
-            <GridLayout
-                android:id="@+id/gridBoard"
+            <FrameLayout
+                android:id="@+id/boardContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:columnCount="15"
-                android:rowCount="15"
-                android:padding="4dp" />
+                android:layout_gravity="center">
+
+                <GridLayout
+                    android:id="@+id/gridBoard"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.example.caroonline.WinningLineView
+                    android:id="@+id/winningLineView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </FrameLayout>
 
         </ScrollView>
 

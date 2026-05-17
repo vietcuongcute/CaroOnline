@@ -224,6 +224,7 @@ public class MinimaxAI {
                 int score2 = evaluateMove(board, move2[0], move2[1]);
                 return Integer.compare(score2, score1);
             }
+
         });
 
         if (orderedMoves.size() > MAX_CANDIDATE_MOVES) {
@@ -231,6 +232,7 @@ public class MinimaxAI {
         }
 
         return orderedMoves;
+
     }
 
     private int evaluateMove(String[][] board, int row, int col) {

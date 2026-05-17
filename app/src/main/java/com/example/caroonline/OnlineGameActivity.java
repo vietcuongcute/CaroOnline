@@ -22,6 +22,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.DatabaseError;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
+import android.widget.FrameLayout;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +37,7 @@ public class OnlineGameActivity extends AppCompatActivity {
 
     private TextView tvRoomInfo, tvPlayers, tvTurn;
     private GridLayout gridBoard;
+    private FrameLayout boardContainer;
     private Button btnLeaveRoom;
 
     private Button[][] buttons;
@@ -61,12 +66,17 @@ public class OnlineGameActivity extends AppCompatActivity {
     private int lastMoveCol = -1;
     private TextView tvTimer;
     private CountDownTimer turnTimer;
-    private static final long TURN_TIME_MS = 30000;
+    private static final long TURN_TIME_MS = 60000;
     private long turnStartedAt = 0;
 
+    private WinningLineView winningLineView;
+    private Handler resultHandler = new Handler(Looper.getMainLooper());
 
     private boolean resultHandled = false;
     private boolean playAgainDialogShown = false;
+    private AlertDialog resultDialog;
+    private AlertDialog playAgainDialog;
+
 
     private static final String DATABASE_URL = "https://caroonline-e650f-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
@@ -123,6 +133,8 @@ public class OnlineGameActivity extends AppCompatActivity {
         gridBoard = findViewById(R.id.gridBoard);
         btnLeaveRoom = findViewById(R.id.btnLeaveRoom);
         tvTimer = findViewById(R.id.tvTimer);
+        winningLineView = findViewById(R.id.winningLineView);
+        boardContainer = findViewById(R.id.boardContainer);
     }
 
     private void createBoard() {
@@ -158,6 +170,16 @@ public class OnlineGameActivity extends AppCompatActivity {
                 gridBoard.addView(cell);
             }
         }
+        gridBoard.post(() -> {
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    gridBoard.getWidth(),
+                    gridBoard.getHeight()
+            );
+
+            winningLineView.setLayoutParams(params);
+            winningLineView.bringToFront();
+            winningLineView.setVisibility(View.VISIBLE);
+        });
     }
 
     private void listenRoomChanges() {
@@ -171,19 +193,34 @@ public class OnlineGameActivity extends AppCompatActivity {
                 }
 
                 loadRoomInfo(snapshot);
-                if (status.equals("playing")) {
-                    resultHandled = false;
-                    playAgainDialogShown = false;
-                }
                 loadBoard(snapshot);
                 updateUI();
                 startTurnTimer();
+
                 handlePlayAgainRequest(snapshot);
                 handlePlayAgainResponse(snapshot);
 
+                if (status.equals("playing")) {
+                    resultHandled = false;
+                    playAgainDialogShown = false;
+
+                    if (resultDialog != null && resultDialog.isShowing()) {
+                        resultDialog.dismiss();
+                    }
+
+                    if (playAgainDialog != null && playAgainDialog.isShowing()) {
+                        playAgainDialog.dismiss();
+                    }
+                    resultHandler.removeCallbacksAndMessages(null);
+
+                    if (winningLineView != null) {
+                        winningLineView.clearLine();
+                    }
+                }
+
                 if (status.equals("finished") && !resultHandled) {
                     resultHandled = true;
-                    handleGameFinished();
+                    showWinningLineThenResult();
                 }
             }
 
@@ -196,6 +233,111 @@ public class OnlineGameActivity extends AppCompatActivity {
         roomRef.addValueEventListener(roomListener);
     }
 
+    private void showWinningLineThenResult() {
+        if (winner.equals("DRAW")) {
+            handleGameFinished();
+            return;
+        }
+
+        if (lastMoveRow == -1 || lastMoveCol == -1) {
+            handleGameFinished();
+            return;
+        }
+
+        boolean hasLine = drawWinningLine(lastMoveRow, lastMoveCol, winner);
+
+        if (!hasLine) {
+            handleGameFinished();
+            return;
+        }
+
+        tvTurn.setText("Đã có người chiến thắng!");
+
+        resultHandler.postDelayed(() -> {
+            if (status.equals("finished")) {
+                handleGameFinished();
+            }
+        }, 5000);
+    }
+
+    private boolean drawWinningLine(int row, int col, String symbol) {
+        int[][] directions = {
+                {0, 1},
+                {1, 0},
+                {1, 1},
+                {1, -1}
+        };
+
+        for (int[] dir : directions) {
+            int dRow = dir[0];
+            int dCol = dir[1];
+
+            int[] line = getExactFiveLine(row, col, dRow, dCol, symbol);
+
+            if (line != null) {
+                int startRow = line[0];
+                int startCol = line[1];
+                int endRow = line[2];
+                int endCol = line[3];
+
+                Button startButton = buttons[startRow][startCol];
+                Button endButton = buttons[endRow][endCol];
+
+                gridBoard.post(() -> {
+                    winningLineView.bringToFront();
+                    winningLineView.setVisibility(View.VISIBLE);
+
+                    float startX = startButton.getLeft() + startButton.getWidth() / 2f;
+                    float startY = startButton.getTop() + startButton.getHeight() / 2f;
+
+                    float endX = endButton.getLeft() + endButton.getWidth() / 2f;
+                    float endY = endButton.getTop() + endButton.getHeight() / 2f;
+
+                    winningLineView.showWinningLine(startX, startY, endX, endY);
+                });
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int[] getExactFiveLine(int row, int col, int dRow, int dCol, String symbol) {
+        int startRow = row;
+        int startCol = col;
+        int endRow = row;
+        int endCol = col;
+        int count = 1;
+
+        int r = row + dRow;
+        int c = col + dCol;
+
+        while (isInsideBoard(r, c) && board[r][c].equals(symbol)) {
+            endRow = r;
+            endCol = c;
+            count++;
+            r += dRow;
+            c += dCol;
+        }
+
+        r = row - dRow;
+        c = col - dCol;
+
+        while (isInsideBoard(r, c) && board[r][c].equals(symbol)) {
+            startRow = r;
+            startCol = c;
+            count++;
+            r -= dRow;
+            c -= dCol;
+        }
+
+        if (count == WIN_COUNT) {
+            return new int[]{startRow, startCol, endRow, endCol};
+        }
+
+        return null;
+    }
     private void handlePlayAgainResponse(DataSnapshot snapshot) {
         if (!mySymbol.equals("X")) {
             return;
@@ -246,15 +388,29 @@ public class OnlineGameActivity extends AppCompatActivity {
 
         playAgainDialogShown = true;
 
-        new AlertDialog.Builder(this)
+        if (playAgainDialog != null && playAgainDialog.isShowing()) {
+            return;
+        }
+
+        playAgainDialog = new AlertDialog.Builder(this)
                 .setTitle("Chơi lại")
-                .setMessage("Đối thủ muốn chơi lại. Bạn có đồng ý không?")
+                .setMessage("Đối thủ muốn chơi lại.\nBạn có đồng ý không?")
                 .setPositiveButton("Đồng ý", (dialog, which) -> acceptPlayAgain())
                 .setNegativeButton("Từ chối", (dialog, which) -> rejectPlayAgain())
                 .setCancelable(false)
-                .show();
+                .create();
+
+        playAgainDialog.show();
     }
     private void acceptPlayAgain() {
+        if (resultDialog != null && resultDialog.isShowing()) {
+            resultDialog.dismiss();
+        }
+
+        if (playAgainDialog != null && playAgainDialog.isShowing()) {
+            playAgainDialog.dismiss();
+        }
+
         roomRef.child("playAgainResponse").setValue("ACCEPT")
                 .addOnSuccessListener(unused -> {
                     if (!mySymbol.equals("X")) {
@@ -441,13 +597,19 @@ public class OnlineGameActivity extends AppCompatActivity {
             processOnlineResultOnce();
         }
 
-        new AlertDialog.Builder(this)
+        if (resultDialog != null && resultDialog.isShowing()) {
+            resultDialog.dismiss();
+        }
+
+        resultDialog = new AlertDialog.Builder(this)
                 .setTitle("Kết quả")
                 .setMessage(message)
                 .setPositiveButton("Chơi lại", (dialog, which) -> requestPlayAgain())
                 .setNegativeButton("Về trang chủ", (dialog, which) -> deleteRoomAndFinish())
                 .setCancelable(false)
-                .show();
+                .create();
+
+        resultDialog.show();
     }
     private void playAgain() {
         if (!mySymbol.equals("X")) {
@@ -464,6 +626,7 @@ public class OnlineGameActivity extends AppCompatActivity {
         updateMap.put("resultSaved", false);
         updateMap.put("createdAt", System.currentTimeMillis());
         updateMap.put("lastMoveRow", null);
+        updateMap.put("lastMoveCol", null);
         updateMap.put("playAgainRequest", false);
         updateMap.put("playAgainRequester", "");
         updateMap.put("playAgainResponse", "");
@@ -802,11 +965,13 @@ public class OnlineGameActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        resultHandler.removeCallbacksAndMessages(null);
         if (turnTimer != null) {
             turnTimer.cancel();
         }
         if (roomRef != null && roomListener != null) {
             roomRef.removeEventListener(roomListener);
         }
+
     }
 }
