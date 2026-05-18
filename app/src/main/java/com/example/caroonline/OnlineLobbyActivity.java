@@ -130,31 +130,55 @@ public class OnlineLobbyActivity extends AppCompatActivity {
     private void loadWaitingRooms() {
         FirebaseDatabase.getInstance(DATABASE_URL)
                 .getReference("rooms")
-                .orderByChild("status")
-                .equalTo("waiting")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
                         roomDisplayList.clear();
                         roomCodeList.clear();
 
+                        int totalRooms = 0;
+                        int waitingRooms = 0;
+
                         for (DataSnapshot roomSnapshot : snapshot.getChildren()) {
+                            totalRooms++;
+
                             String roomCode = roomSnapshot.getKey();
+                            String status = roomSnapshot.child("status").getValue(String.class);
                             String playerXName = roomSnapshot.child("playerXName").getValue(String.class);
+                            String playerOId = roomSnapshot.child("playerOId").getValue(String.class);
 
                             if (roomCode == null) {
                                 continue;
+                            }
+
+                            if (status == null) {
+                                status = "";
+                            }
+
+                            if (playerOId == null) {
+                                playerOId = "";
                             }
 
                             if (playerXName == null || playerXName.trim().isEmpty()) {
                                 playerXName = "Người chơi";
                             }
 
-                            roomCodeList.add(roomCode);
-                            roomDisplayList.add("Phòng " + roomCode + " - Chủ phòng: " + playerXName);
+                            // Chỉ hiện phòng đang chờ và chưa có người O
+                            if (status.trim().equals("waiting") && playerOId.trim().isEmpty()) {
+                                waitingRooms++;
+
+                                roomCodeList.add(roomCode);
+                                roomDisplayList.add("Phòng " + roomCode + " - Chủ phòng: " + playerXName);
+                            }
                         }
 
                         roomAdapter.notifyDataSetChanged();
+
+                        Toast.makeText(
+                                OnlineLobbyActivity.this,
+                                "Tổng phòng: " + totalRooms + " | Đang chờ: " + waitingRooms,
+                                Toast.LENGTH_SHORT
+                        ).show();
                     }
 
                     @Override
@@ -167,6 +191,7 @@ public class OnlineLobbyActivity extends AppCompatActivity {
                     }
                 });
     }
+
     private void setupEvents() {
         btnCreateRoom.setOnClickListener(v -> createRoom());
 
