@@ -3,101 +3,121 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#F5F5F5">
+    android:background="@drawable/bg_app_gradient">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="22dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:gravity="center"
             android:text="Chơi Online"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="#222222"
-            android:gravity="center"
-            android:layout_marginTop="60dp" />
+            android:textColor="#4C1D95"
+            android:textSize="34sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
             android:text="Tạo phòng hoặc nhập mã phòng để chơi với bạn bè"
-            android:textSize="16sp"
-            android:textColor="#777777"
-            android:gravity="center"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="36dp" />
+            android:textColor="#7C3AED"
+            android:textSize="15sp" />
 
-        <Button
-            android:id="@+id/btnCreateRoom"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Tạo phòng mới"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="32dp" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nhập mã phòng"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_card_glass"
+            android:elevation="8dp"
+            android:orientation="vertical"
+            android:padding="18dp">
 
-        <EditText
-            android:id="@+id/edtRoomCode"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:hint="Ví dụ: 123456"
-            android:inputType="number"
-            android:maxLength="6"
-            android:textSize="18sp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:background="#FFFFFF"
-            android:layout_marginBottom="20dp" />
+            <Button
+                android:id="@+id/btnCreateRoom"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:background="@drawable/bg_button_primary"
+                android:elevation="6dp"
+                android:text="Tạo phòng mới"
+                android:textAllCaps="false"
+                android:textColor="@color/button_text_white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnJoinRoom"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Tham gia phòng"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="28dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Nhập mã phòng"
+                android:textColor="#4C1D95"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edtRoomCode"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_input"
+                android:hint="Ví dụ: 123456"
+                android:inputType="number"
+                android:maxLength="6"
+                android:textColor="#1F2937"
+                android:textColorHint="#A78BFA"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/btnJoinRoom"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_button_primary"
+                android:elevation="6dp"
+                android:text="Tham gia phòng"
+                android:textAllCaps="false"
+                android:textColor="@color/button_text_white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvAvailableRooms"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="Phòng đang chờ"
+            android:textColor="#4C1D95"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#777777"
-            android:layout_marginBottom="8dp" />
+            android:textStyle="bold" />
 
         <ListView
             android:id="@+id/listRooms"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:background="#FFFFFF"
+            android:layout_height="190dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_list"
+            android:divider="#FBCFE8"
             android:dividerHeight="1dp"
-            android:layout_marginBottom="32dp" />
+            android:padding="8dp" />
 
         <Button
             android:id="@+id/btnBackHome"
             android:layout_width="match_parent"
             android:layout_height="56dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="22dp"
+            android:background="@drawable/bg_button_secondary"
             android:text="Về trang chủ"
+            android:textAllCaps="false"
+            android:textColor="@color/button_text_white"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="24dp" />
-
+            android:textStyle="bold" />
     </LinearLayout>
-
 </ScrollView>
