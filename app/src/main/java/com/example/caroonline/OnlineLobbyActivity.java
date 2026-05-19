@@ -174,11 +174,7 @@ public class OnlineLobbyActivity extends AppCompatActivity {
 
                         roomAdapter.notifyDataSetChanged();
 
-                        Toast.makeText(
-                                OnlineLobbyActivity.this,
-                                "Tổng phòng: " + totalRooms + " | Đang chờ: " + waitingRooms,
-                                Toast.LENGTH_SHORT
-                        ).show();
+
                     }
 
                     @Override
