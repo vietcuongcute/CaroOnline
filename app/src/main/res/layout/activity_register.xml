@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Vào game nhanh, leo rank cực cháy"
+                android:text="Đấu trí mộng mơ, kết nối bạn bè"
                 android:textColor="#7C3AED"
                 android:textSize="15sp" />
 

@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="34dp"
             android:gravity="center"
-            android:text="Caro Online"
+            android:text="Caro Dream"
             android:textColor="#4C1D95"
             android:textSize="38sp"
             android:textStyle="bold" />

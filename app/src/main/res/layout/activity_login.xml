@@ -35,7 +35,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
-                android:text="Caro Online"
+                android:text="Caro Dream"
                 android:textColor="#4C1D95"
                 android:textSize="34sp"
                 android:textStyle="bold" />
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Đăng nhập để chiến Caro cùng bạn bè"
+                android:text="Đấu trí mộng mơ, kết nối bạn bè"
                 android:textColor="#7C3AED"
                 android:textSize="15sp" />
 

@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="💜 Caro Online"
+            android:text="💜 Caro Dream"
             android:textColor="#5B21B6"
             android:textSize="36sp"
             android:textStyle="bold" />
@@ -32,87 +32,26 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="📌 Giới thiệu"
-                android:textColor="#8A1748"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:lineSpacingExtra="6dp"
-                android:text="Caro Online là ứng dụng chơi cờ caro được xây dựng bằng Android Java XML, có chế độ chơi với AI Minimax và chơi online realtime bằng Firebase."
+                android:text="Caro Dream là ứng dụng chơi cờ caro được xây dựng bằng Android Java XML, có chế độ chơi với AI Minimax và chơi online realtime bằng Firebase."
                 android:textColor="#4B5563"
                 android:textSize="16sp" />
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:text="✨ Chức năng chính"
-                android:textColor="#8A1748"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:lineSpacingExtra="6dp"
-                android:text="• Đăng nhập / đăng ký bằng Firebase\n• Chơi với AI\n• Chơi online realtime\n• Lưu lịch sử đấu\n• Bảng xếp hạng\n• Thống kê thắng, thua, hòa"
-                android:textColor="#4B5563"
-                android:textSize="16sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:text="🛠 Công nghệ sử dụng"
-                android:textColor="#8A1748"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:lineSpacingExtra="6dp"
-                android:text="• Java\n• Android Studio\n• XML Layout\n• Firebase Authentication\n• Firebase Realtime Database\n• Minimax AI"
-                android:textColor="#4B5563"
-                android:textSize="16sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="40dp"
                 android:gravity="center"
-                android:text="Made by Viết Cường"
-                android:textColor="#8A1748"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:gravity="center"
-                android:text="Khoa CNTT - K21 - ĐH Yersin Đà Lạt"
+                android:text="Chúc các bạn chơi game vui vẻ !"
                 android:textColor="#8A1748"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:gravity="center"
-                android:text="Phiên bản 1.0"
-                android:textColor="#7C3AED"
-                android:textSize="16sp"
-                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -126,6 +65,36 @@
             android:textAllCaps="false"
             android:textColor="@color/button_text_white"
             android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:gravity="center"
+            android:text="Made and developed by Viết Cường"
+            android:textColor="#8A1748"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:gravity="center"
+            android:text="Khoa CNTT - K21 - ĐH Yersin Đà Lạt"
+            android:textColor="#8A1748"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:gravity="center"
+            android:text="Phiên bản 1.0"
+            android:textColor="#7C3AED"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
     </LinearLayout>
