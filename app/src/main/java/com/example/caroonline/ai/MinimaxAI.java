@@ -105,7 +105,6 @@ public class MinimaxAI {
                 }
 
                 int score = minimax(board, depth - 1, false, alpha, beta);
-
                 board[row][col] = "";
 
                 bestScore = Math.max(bestScore, score);

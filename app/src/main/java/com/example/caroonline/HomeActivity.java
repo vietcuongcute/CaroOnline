@@ -16,7 +16,8 @@ import com.google.firebase.database.FirebaseDatabase;
 public class HomeActivity extends AppCompatActivity {
 
     private TextView tvUserInfo, tvStats;
-    private Button btnPlayAI, btnPlayOnline, btnHistory, btnRanking, btnLogout;
+    Button btnPlayAI, btnPlayOnline, btnHistory, btnRanking, btnAbout, btnLogout;
+
 
     private FirebaseAuth firebaseAuth;
     private FirebaseUser currentUser;
@@ -56,7 +57,7 @@ public class HomeActivity extends AppCompatActivity {
     private void initViews() {
         tvUserInfo = findViewById(R.id.tvUserInfo);
         tvStats = findViewById(R.id.tvStats);
-
+        btnAbout = findViewById(R.id.btnAbout);
         btnPlayAI = findViewById(R.id.btnPlayAI);
         btnPlayOnline = findViewById(R.id.btnPlayOnline);
         btnHistory = findViewById(R.id.btnHistory);
@@ -129,6 +130,10 @@ public class HomeActivity extends AppCompatActivity {
 
         btnRanking.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, RankingActivity.class);
+            startActivity(intent);
+        });
+        btnAbout.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, AboutActivity.class);
             startActivity(intent);
         });
 

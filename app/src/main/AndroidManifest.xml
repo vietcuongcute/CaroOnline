@@ -26,6 +26,9 @@
             android:name=".HistoryActivity"
             android:exported="false" />
         <activity
+            android:name=".AboutActivity" />
+
+        <activity
             android:name=".GameAIActivity"
             android:exported="false" />
         <activity

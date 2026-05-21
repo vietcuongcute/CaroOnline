@@ -105,6 +105,19 @@
                 android:textStyle="bold" />
 
             <Button
+                android:id="@+id/btnAbout"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_button_purple"
+                android:elevation="6dp"
+                android:text="💜 About"
+                android:textAllCaps="false"
+                android:textColor="@color/button_text_white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
