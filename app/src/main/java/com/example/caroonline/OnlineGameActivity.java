@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.graphics.drawable.GradientDrawable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -141,6 +142,7 @@ public class OnlineGameActivity extends AppCompatActivity {
         gridBoard.removeAllViews();
         gridBoard.setColumnCount(BOARD_SIZE);
         gridBoard.setRowCount(BOARD_SIZE);
+        gridBoard.setBackgroundColor(Color.parseColor("#E0E0E0"));
 
         int cellSize = dpToPx(38);
 
@@ -151,14 +153,10 @@ public class OnlineGameActivity extends AppCompatActivity {
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.width = cellSize;
                 params.height = cellSize;
-                params.setMargins(1, 1, 1, 1);
+                params.setMargins(0, 0, 0, 0);
                 cell.setLayoutParams(params);
 
-                cell.setText("");
-                cell.setTextSize(14);
-                cell.setGravity(Gravity.CENTER);
-                cell.setPadding(0, 0, 0, 0);
-                cell.setBackgroundColor(Color.WHITE);
+                styleCell(cell, "", false);
 
                 final int r = row;
                 final int c = col;
@@ -170,6 +168,7 @@ public class OnlineGameActivity extends AppCompatActivity {
                 gridBoard.addView(cell);
             }
         }
+
         gridBoard.post(() -> {
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                     gridBoard.getWidth(),
@@ -454,10 +453,9 @@ public class OnlineGameActivity extends AppCompatActivity {
         for (int row = 0; row < BOARD_SIZE; row++) {
             for (int col = 0; col < BOARD_SIZE; col++) {
                 board[row][col] = "";
-                buttons[row][col].setText("");
+                styleCell(buttons[row][col], "", false);
                 buttons[row][col].setEnabled(true);
-                buttons[row][col].setTypeface(null, Typeface.NORMAL);
-                buttons[row][col].setBackgroundColor(Color.WHITE);
+                buttons[row][col].setAlpha(1f);
             }
         }
 
@@ -479,18 +477,12 @@ public class OnlineGameActivity extends AppCompatActivity {
 
                 if (isInsideBoard(row, col)) {
                     board[row][col] = value;
-                    buttons[row][col].setText(value);
-                    buttons[row][col].setEnabled(false);
-                    buttons[row][col].setTypeface(null, Typeface.BOLD);
 
-                    if (value.equals("X")) {
-                        buttons[row][col].setTextColor(Color.BLUE);
-                    } else {
-                        buttons[row][col].setTextColor(Color.RED);
-                    }
-                    if (row == lastMoveRow && col == lastMoveCol) {
-                        buttons[row][col].setBackgroundColor(Color.rgb(255, 245, 157));
-                    }
+                    boolean isLastMove = row == lastMoveRow && col == lastMoveCol;
+                    styleCell(buttons[row][col], value, isLastMove);
+
+                    buttons[row][col].setEnabled(false);
+                    buttons[row][col].setAlpha(1f);
                 }
             } catch (Exception ignored) {
             }
@@ -537,6 +529,8 @@ public class OnlineGameActivity extends AppCompatActivity {
                 } else {
                     buttons[row][col].setEnabled(false);
                 }
+
+                buttons[row][col].setAlpha(1f);
             }
         }
     }
@@ -960,7 +954,43 @@ public class OnlineGameActivity extends AppCompatActivity {
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
+    private GradientDrawable createCellBackground(int color) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.RECTANGLE);
+        drawable.setColor(color);
+        drawable.setStroke(dpToPx(1), Color.parseColor("#E0E0E0"));
+        drawable.setCornerRadius(0);
+        return drawable;
+    }
 
+    private void styleCell(Button cell, String value, boolean isLastMove) {
+        cell.setText(value);
+        cell.setTextSize(14);
+        cell.setGravity(Gravity.CENTER);
+        cell.setPadding(0, 0, 0, 0);
+        cell.setAlpha(1f);
+        cell.setAllCaps(false);
+        cell.setIncludeFontPadding(false);
+
+        if (value == null || value.isEmpty()) {
+            cell.setTypeface(null, Typeface.NORMAL);
+            cell.setTextColor(Color.TRANSPARENT);
+        } else {
+            cell.setTypeface(null, Typeface.BOLD);
+
+            if (value.equals("X")) {
+                cell.setTextColor(Color.BLUE);
+            } else {
+                cell.setTextColor(Color.RED);
+            }
+        }
+
+        if (isLastMove) {
+            cell.setBackground(createCellBackground(Color.rgb(255, 245, 157)));
+        } else {
+            cell.setBackground(createCellBackground(Color.WHITE));
+        }
+    }
 
     @Override
     protected void onDestroy() {
